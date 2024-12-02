@@ -1,83 +1,30 @@
 import axios from 'axios';
 
-// Configure axios to use the backend API URL
-const API_URL = 'https://positivity-social-backend.onrender.com';
-console.log('Using API URL:', API_URL);
-
-// Retry configuration
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1 second
-
-// Configure axios defaults
 const api = axios.create({
-    baseURL: API_URL,
+    baseURL: 'https://positivity-social-backend.onrender.com',
     headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    },
-    withCredentials: true
+        'Content-Type': 'application/json'
+    }
 });
 
-// Helper function to delay execution
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-// Add request interceptor for debugging
+// Add request interceptor
 api.interceptors.request.use(
     config => {
-        console.log('Making request to:', config.url);
-        // Add retry count to config if not present
-        if (config.retry === undefined) {
-            config.retry = 0;
-        }
+        console.log('Request URL:', config.url);
         return config;
     },
     error => {
-        console.error('Request error:', error);
         return Promise.reject(error);
     }
 );
 
-// Add response interceptor to handle errors
+// Add response interceptor
 api.interceptors.response.use(
     response => {
-        console.log('Received response:', response);
         return response;
     },
-    async error => {
-        const config = error.config;
-        
-        // Only retry on specific error conditions
-        if (
-            error.response?.status === 429 || // Rate limit exceeded
-            error.response?.status === 503 || // Service unavailable
-            !error.response // Network error
-        ) {
-            // Check if we should retry
-            if (config.retry < MAX_RETRIES) {
-                config.retry += 1;
-                console.log(`Retrying request (${config.retry}/${MAX_RETRIES})...`);
-                
-                // Wait before retrying
-                await delay(RETRY_DELAY * config.retry);
-                
-                // Retry the request
-                return api(config);
-            }
-        }
-
-        // Log the error details
-        if (error.response) {
-            console.error('Response Error:', {
-                data: error.response.data,
-                status: error.response.status,
-                headers: error.response.headers
-            });
-        } else if (error.request) {
-            console.error('Request Error:', error.request);
-        } else {
-            console.error('Error:', error.message);
-        }
-
+    error => {
+        console.error('API Error:', error.message);
         return Promise.reject(error);
     }
 );
