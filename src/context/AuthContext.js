@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import axios from '../config/api';
+import api from '../config/api';
 
 const AuthContext = createContext(null);
 
@@ -7,30 +7,47 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const login = async (email, password) => {
+  const login = async (username, password) => {
     try {
-      const response = await axios.post('/api/login', { email, password });
-      setUser(response.data.user);
+      const response = await api.post('/login', { username, password });
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(user);
       setIsAuthenticated(true);
+      return response.data;
     } catch (error) {
+      console.error('Login error:', error);
       throw new Error(error.response?.data?.error || 'Invalid credentials');
     }
   };
 
   const register = async (username, email, password) => {
     try {
-      const response = await axios.post('/api/register', { username, email, password });
+      console.log('Registering with:', { username, email, password });
+      const response = await api.post('/register', { username, email, password });
+      console.log('Registration response:', response.data);
+      
       if (response.data.message === 'User created successfully') {
-        await login(email, password);
+        // After successful registration, login with username and password
+        return await login(username, password);
       }
+      return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.error || 'Registration failed');
+      console.error('Registration error:', error);
+      if (error.response) {
+        throw new Error(error.response.data.error || 'Registration failed');
+      } else if (error.request) {
+        throw new Error('No response from server. Please try again.');
+      } else {
+        throw new Error('Registration failed. Please try again.');
+      }
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
     setUser(null);
     setIsAuthenticated(false);
   };

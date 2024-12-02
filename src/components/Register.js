@@ -7,6 +7,7 @@ import {
   Button,
   Box,
   Link,
+  CircularProgress,
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -16,16 +17,25 @@ function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
     try {
+      console.log('Starting registration...');
       await register(username, email, password);
+      console.log('Registration successful!');
       navigate('/');
     } catch (err) {
-      setError(err.message);
+      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,6 +60,7 @@ function Register() {
               margin="normal"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
               required
             />
             <TextField
@@ -59,6 +70,7 @@ function Register() {
               margin="normal"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
               required
             />
             <TextField
@@ -68,6 +80,7 @@ function Register() {
               margin="normal"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
               required
             />
             {error && (
@@ -80,9 +93,10 @@ function Register() {
               fullWidth
               variant="contained"
               color="primary"
+              disabled={isLoading}
               sx={{ mt: 3 }}
             >
-              Sign Up
+              {isLoading ? <CircularProgress size={24} /> : 'Sign Up'}
             </Button>
             <Box sx={{ mt: 2, textAlign: 'center' }}>
               <Link component={RouterLink} to="/login" variant="body2">
