@@ -1,11 +1,25 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://positivity-social-backend.onrender.com';
+// API Configuration
+const config = {
+    development: {
+        baseURL: 'http://localhost:5000'
+    },
+    production: {
+        baseURL: 'https://positivity-social-backend.onrender.com'
+    }
+};
+
+const environment = process.env.NODE_ENV || 'development';
+const API_BASE_URL = config[environment].baseURL;
+
+console.log('Current environment:', environment);
+console.log('Using API URL:', API_BASE_URL);
 
 // Create axios instance
 const api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 30000, // Increase timeout to 30 seconds
+    timeout: 30000,
     headers: {
         'Content-Type': 'application/json'
     }
@@ -14,13 +28,12 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
     config => {
-        // Log the full URL being requested
-        const fullUrl = `${API_BASE_URL}${config.url}`;
+        const fullUrl = `${config.baseURL}${config.url}`;
         console.log(`Making ${config.method.toUpperCase()} request to: ${fullUrl}`);
         console.log('Request data:', config.data);
         
         // Check if server is reachable
-        return axios.get(`${API_BASE_URL}/health`)
+        return axios.get(`${config.baseURL}/health`)
             .then(() => config)
             .catch(error => {
                 console.error('Server health check failed:', error.message);
