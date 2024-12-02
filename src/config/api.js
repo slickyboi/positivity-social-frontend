@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configure axios to use the backend API URL
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = 'https://positivity-social-backend.onrender.com/api';
 console.log('Using API URL:', API_URL); // Debug log
 
 // Configure axios defaults
@@ -9,7 +9,8 @@ const api = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Access-Control-Allow-Origin': '*'
     },
     withCredentials: false // Disable credentials for now
 });
@@ -34,12 +35,21 @@ api.interceptors.response.use(
         return response;
     },
     error => {
-        console.error('API Error:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            headers: error.response?.headers
-        });
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.error('Response Error:', {
+                data: error.response.data,
+                status: error.response.status,
+                headers: error.response.headers
+            });
+        } else if (error.request) {
+            // The request was made but no response was received
+            console.error('Request Error:', error.request);
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            console.error('Error:', error.message);
+        }
         return Promise.reject(error);
     }
 );
