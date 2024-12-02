@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configure axios to use the backend API URL
-const API_URL = 'https://positivity-social-backend.onrender.com/api';
+const API_URL = 'https://positivity-social-backend.onrender.com';
 console.log('Using API URL:', API_URL); // Debug log
 
 // Configure axios defaults
@@ -9,10 +9,9 @@ const api = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Accept': 'application/json'
     },
-    withCredentials: false // Disable credentials for now
+    withCredentials: true // Enable credentials
 });
 
 // Add request interceptor for debugging
@@ -20,6 +19,10 @@ api.interceptors.request.use(
     config => {
         console.log('Making request to:', config.url);
         console.log('Request config:', config);
+        
+        // Add CORS headers to every request
+        config.headers['Access-Control-Allow-Origin'] = 'https://www.positivitysocial.com';
+        
         return config;
     },
     error => {
