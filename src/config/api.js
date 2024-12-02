@@ -1,46 +1,40 @@
 import axios from 'axios';
 
+// Create axios instance
 const api = axios.create({
-    baseURL: 'https://positivity-social-backend.onrender.com/api',
+    baseURL: 'https://positivity-social-backend.onrender.com',
+    timeout: 10000,
     headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
     }
 });
 
-// Add request interceptor
+// Request interceptor
 api.interceptors.request.use(
     config => {
-        // Add CORS headers to the request
-        config.headers = {
-            ...config.headers,
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
-        };
+        // Log the request
+        console.log(`Making ${config.method.toUpperCase()} request to: ${config.url}`);
         return config;
     },
-    error => Promise.reject(error)
+    error => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
+    }
 );
 
-// Add response interceptor
+// Response interceptor
 api.interceptors.response.use(
-    response => response,
+    response => {
+        console.log('Response received:', response.status);
+        return response;
+    },
     error => {
-        if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            console.error('Response Error:', {
-                data: error.response.data,
-                status: error.response.status,
-                headers: error.response.headers
-            });
-        } else if (error.request) {
-            // The request was made but no response was received
-            console.error('Request Error:', error.request);
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            console.error('Error:', error.message);
+        if (!error.response) {
+            console.error('Network error: No response from server');
+            return Promise.reject(new Error('Network error: Unable to reach the server. Please try again later.'));
         }
+        console.error('Response error:', error.response.status, error.response.data);
         return Promise.reject(error);
     }
 );
